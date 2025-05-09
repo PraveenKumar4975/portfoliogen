@@ -65,7 +65,7 @@ const verifyToken = (req, res, next) => {
 };
 
 // AUTH: Google OAuth
-app.post('/auth/google', async (req, res) => {
+app.post('/auth/google/callback', async (req, res) => {
   const { token } = req.body;
   try {
     const ticket = await client.verifyIdToken({
