@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Praveen Kumar B - Portfolio</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+    .hero-image {
+      background-image: url('https://images.unsplash.com/photo-1517694712202-14f9aa5d9832?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80');
+      background-size: cover;
+      background-position: center;
+    }
+    .fade-in {
+      animation: fadeIn 1s ease-in-out forwards;
+      opacity: 0;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .skill-card {
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .skill-card:hover {
+        transform: scale(1.05);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans">
+
+  <!-- Hero Section -->
+  <header id="hero" class="hero-image text-white py-20 px-6 md:px-24 lg:px-32 xl:px-48 flex items-center justify-center h-screen bg-cover bg-center">
+    <div class="text-center fade-in">
+      <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">Praveen Kumar B</h1>
+      <p class="text-lg md:text-xl lg:text-2xl mb-8">Aspiring Full Stack Developer</p>
+      <a href="#contact" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full inline-block">Contact Me</a>
+    </div>
+  </header>
+
+  <!-- Skills Section -->
+  <section id="skills" class="py-16 px-6 md:px-24 lg:px-32 xl:px-48">
+    <div class="container mx-auto">
+      <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Skills</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Skills -->
+        <div class="skill-card bg-white shadow-md rounded-lg p-6 hover:shadow-xl transition duration-300 ease-in-out">
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">Languages</h3>
+          <ul class="list-disc list-inside text-gray-600">
+            <li>Python</li>
+            <li>C#</li>
+            <li>Javascript</li>
+            <li>SQL</li>
+          </ul>
+        </div>
+
+                 <div class="skill-card bg-white shadow-md rounded-lg p-6 hover:shadow-xl transition duration-300 ease-in-out">
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">Database</h3>
+          <ul class="list-disc list-inside text-gray-600">
+            <li>SQLite</li>
+            <li>Mongodb</li>
+
+          </ul>
+        </div>
+
+        <div class="skill-card bg-white shadow-md rounded-lg p-6 hover:shadow-xl transition duration-300 ease-in-out">
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">Framework</h3>
+          <ul class="list-disc list-inside text-gray-600">
+            <li>React.js</li>
+            <li>Node.js</li>
+            <li>Express.js</li>
+            <li>Redux</li>
+            <li>MUI</li>
+          </ul>
+        </div>
+
+        <div class="skill-card bg-white shadow-md rounded-lg p-6 hover:shadow-xl transition duration-300 ease-in-out">
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">Tools/Platform</h3>
+          <ul class="list-disc list-inside text-gray-600">
+            <li>GIT</li>
+            <li>npm</li>
+            <li>VS Code</li>
+            <li>Postman</li>
+          </ul>
+        </div>
+
+        <div class="skill-card bg-white shadow-md rounded-lg p-6 hover:shadow-xl transition duration-300 ease-in-out">
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">Soft Skills</h3>
+          <ul class="list-disc list-inside text-gray-600">
+            <li>Communication</li>
+            <li>Problem solving</li>
+            <li>Adaptability</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projects Section -->
+  <section id="projects" class="bg-gray-100 py-16 px-6 md:px-24 lg:px-32 xl:px-48">
+    <div class="container mx-auto">
+      <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Projects</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+        <!-- Project 1 -->
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+          <img src="https://via.placeholder.com/600x400" alt="Project 1" class="w-full h-48 object-cover">
+          <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">Mars Curiosity Rover Exploration Website</h3>
+            <p class="text-gray-600 mb-4">Developed a dynamic and interactive web application showcasing images captured by NASA's Mars Curiosity. Integrated NASA APIs to fetch and display real-time rover images and data, enhancing user exploration.</p>
+             <p class="text-gray-600 mb-4">Technologies: React.js, NASA APIs, Axios, Material-UI</p>
+            <a href="https://curiosity-sigma.vercel.app/" class="text-blue-500 hover:text-blue-700">View Project</a>
+          </div>
+        </div>
+
+        <!-- Project 2 -->
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+          <img src="https://via.placeholder.com/600x400" alt="Project 2" class="w-full h-48 object-cover">
+          <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">API CRUD Operations Implementation</h3>
+            <p class="text-gray-600 mb-4">Designed and implemented RESTful APIs with full CRUD functionality to manage a database of user profiles. Developed backend endpoints for Create (POST), Read (GET), Update (PUT), and Delete (DELETE) operations using Express.js and MongoDB. Integrated JWT Authentication for secure user authentication and authorization of API requests.</p>
+             <p class="text-gray-600 mb-4">Technologies: Node.js, Express.js, MongoDB, Postman, JWT</p>
+            <a href="#" class="text-blue-500 hover:text-blue-700">View Project</a>
+          </div>
+        </div>
+
+         <!-- Project 3 -->
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+          <img src="https://via.placeholder.com/600x400" alt="Project 3" class="w-full h-48 object-cover">
+          <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">Attendance System using Face Recognition</h3>
+            <p class="text-gray-600 mb-4">Developed an attendance system leveraging face recognition with SVM for accurate identification and classification and Caffe model for enhanced accuracy. Utilized imutils and numpy for efficient image processing and feature extraction. Employed pickle for saving and loading trained models, ensuring easy deployment and scalability. Implemented Haarcascade Frontal Face algorithm for effective face detection and localization.</p>
+             <p class="text-gray-600 mb-4">Technologies: Python, SVM, Caffe Model, imutils, numpy, Haarcascade</p>
+            <a href="#" class="text-blue-500 hover:text-blue-700">View Project</a>
+          </div>
+        </div>
+
+          <!-- Project 4 -->
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+          <img src="https://via.placeholder.com/600x400" alt="Project 4" class="w-full h-48 object-cover">
+          <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">Analyze the COVID-19 Data</h3>
+            <p class="text-gray-600 mb-4">This project uses SQL and Power BI to analyze the dataset of COVID-19. The objective of the project is to analyze patient data, such as information on those who had the Covishield as per the state and the number of positive and negative cases.</p>
+            <p class="text-gray-600 mb-4">Technologies: SQL, Power BI</p>
+
+            <a href="#" class="text-blue-500 hover:text-blue-700">View Project</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Education Section -->
+  <section id="education" class="py-16 px-6 md:px-24 lg:px-32 xl:px-48">
+    <div class="container mx-auto">
+      <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Education</h2>
+
+      <div class="bg-white shadow-md rounded-lg p-6">
+        <h3 class="text-xl font-semibold text-gray-700 mb-2">Bachelor of Engineering in Computer Science</h3>
+        <p class="text-gray-600 mb-2">Mailam Engineering College, India</p>
+        <p class="text-gray-600">2021 - 2025</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="bg-gray-100 py-16 px-6 md:px-24 lg:px-32 xl:px-48">
+    <div class="container mx-auto">
+      <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Contact</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <p class="text-gray-700 mb-4">Feel free to reach out to me!</p>
+          <ul class="list-none">
+            <li class="mb-2">
+              <span class="font-semibold">Email:</span>
+              <a href="mailto:ppb4975@gmail.com" class="text-blue-500 hover:text-blue-700">ppb4975@gmail.com</a>
+            </li>
+            <li class="mb-2">
+              <span class="font-semibold">Phone:</span>
+              +91 8754661074
+            </li>
+            <li>
+              <span class="font-semibold">LinkedIn:</span>
+              <a href="https://linkedin.com/in/praveen-kumar-b-615b5924a" class="text-blue-500 hover:text-blue-700">linkedin.com/in/praveen-kumar-b-615b5924a</a>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-4 text-center">
+    <p>&copy; 2024 Praveen Kumar B. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>
