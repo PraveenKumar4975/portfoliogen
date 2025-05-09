@@ -1,5 +1,4 @@
 require("dotenv").config();
-const { exec } = require("child_process");
 const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
@@ -8,58 +7,69 @@ const axios = require("axios");
 const FormData = require("form-data");
 const path = require("path");
 const nodemailer = require("nodemailer");
-const { log } = require("console");
-const { OAuth2Client } = require('google-auth-library');
-const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET;
-
+const { exec } = require("child_process");
+const { OAuth2Client } = require("google-auth-library");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 const PORT = 5000;
 
+app.use(express.json()); // parse JSON requests
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+app.use(express.static("public"));
+
+// Environment variables
+const JWT_SECRET = process.env.JWT_SECRET;
 const API_KEY = process.env.API_KEY;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 
+// CORS Configuration
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://kaleidoscopic-chimera-030684.netlify.app"
+];
 
-app.use(express.json());
-const corsOptions = {
-  origin: "http://localhost:3000", // Frontend URL
+const corsOptions = { 
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"], // Allow the Authorization header
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
 };
 
 app.use(cors(corsOptions));
 
-app.use(cors());
+// Google OAuth client
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-app.use(express.static("public"));
-// Setup Google Client
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-// Middleware to validate JWT
+// JWT Middleware
 const verifyToken = (req, res, next) => {
   const token = req.header("Authorization")?.replace("Bearer ", "");
-  if (!token) {
-    return res.status(401).json({ message: "Access denied. No token provided." });
-  }
+  if (!token) return res.status(401).json({ message: "Access denied. No token provided." });
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // Attach the decoded user to the request
-    next(); // Proceed to the next middleware/route handler
+    req.user = decoded;
+    next();
   } catch (err) {
     return res.status(400).json({ message: "Invalid token" });
   }
 };
-// AUTH ROUTE (POST /auth/google)
-// =======================
+
+// AUTH: Google OAuth
 app.post('/auth/google', async (req, res) => {
   const { token } = req.body;
-
   try {
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
@@ -69,13 +79,7 @@ app.post('/auth/google', async (req, res) => {
       picture: payload.picture,
     };
 
-    // Optional: Restrict to certain users
-    // const allowedUsers = ['example@gmail.com']; // Replace with real email(s)
-    // if (!allowedUsers.includes(user.email)) {
-    //   return res.status(401).json({ success: false, message: "Unauthorized user" });
-    // }
-
-    const jwtToken = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const jwtToken = jwt.sign(user, JWT_SECRET, { expiresIn: '1h' });
 
     res.status(200).json({
       success: true,
@@ -88,44 +92,11 @@ app.post('/auth/google', async (req, res) => {
   }
 });
 
-// Middleware to protect routes
-// const verifyToken = (req, res, next) => {
-//   const authHeader = req.headers['authorization'];
-//   console.log("Auth Header:", authHeader);
-
-//   const token = authHeader && authHeader.split(' ')[1];
-//   console.log("Extracted Token:", token);
-
-//   if (!token) return res.sendStatus(401);
-
-//   jwt.verify(token, JWT_SECRET, (err, user) => {
-//     if (err) {
-//       console.log("JWT Error:", err);
-//       return res.sendStatus(403);
-//     }
-//     req.user = user;
-//     next();
-//   });
-// };
-
-// =======================
-app.use(cors());
-
+// Resume Upload + Parse
 const upload = multer({ dest: "uploads/" });
-
 let storedParsedData = null;
 
-// Utility to clean AI HTML
-const cleanHTML = (html) =>
-  html
-    .replace(/```(html|jsx)?/g, "")
-    .replace(/```/g, "")
-    .replace(/\\boxed\{/g, "")
-    .replace(/\}$/, "")
-    .trim();
-
-// Upload + parse resume
-app.post("/upload-resume",verifyToken, upload.single("resume"), async (req, res) => {
+app.post("/upload-resume", verifyToken, upload.single("resume"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
   try {
@@ -136,34 +107,31 @@ app.post("/upload-resume",verifyToken, upload.single("resume"), async (req, res)
     formData.append("file", fs.createReadStream(filePath));
 
     const response = await axios.post("https://resumeparser.app/resume/parse", formData, {
-      headers: { Authorization: `Bearer ${API_KEY}`, ...formData.getHeaders() },
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        ...formData.getHeaders()
+      },
     });
 
     fs.unlinkSync(filePath);
     storedParsedData = response.data;
-    console.log(storedParsedData);
-
     res.json({ message: "Resume parsed successfully", parsedData: storedParsedData });
   } catch (err) {
-    console.error("❌ Resume parse error:", err.response?.data || err.message);
+    console.error("Resume parse error:", err.response?.data || err.message);
     res.status(500).json({ error: "Resume parsing failed", details: err.message });
   }
 });
 
-// Generate HTML portfolio
+// Generate Portfolio
 app.post("/generate-portfolio", async (req, res) => {
-  if (!storedParsedData)
-    return res.status(400).json({ error: "No resume data found" });
+  if (!storedParsedData) return res.status(400).json({ error: "No resume data found" });
 
   const prompt = `Generate a fully responsive and modern personal portfolio website using TailwindCSS via CDN. The website must include smooth scrolling and the following sections: Hero, Skills, Projects, Education, and Contact. The design should be visually elegant with clean layout, professional spacing, and subtle animations.
 
 Use the following resume data to personalize the content:
-
 ${JSON.stringify(storedParsedData, null, 2)}
 
-Return only a complete standalone HTML file that starts with <!DOCTYPE html>. 
-⚠️ Do NOT include any markdown, triple backticks , code fences, JSX, or explanatory text. Respond with pure HTML only.`;
-
+Return only a complete standalone HTML file that starts with <!DOCTYPE html>.`;
 
   try {
     const aiResponse = await axios.post(
@@ -174,28 +142,24 @@ Return only a complete standalone HTML file that starts with <!DOCTYPE html>.
       },
       {
         headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
           "Content-Type": "application/json"
         }
       }
     );
 
     const html = aiResponse.data.choices[0].message.content;
-
     const outputPath = path.join(__dirname, "public", "index.html");
     fs.writeFileSync(outputPath, html, "utf8");
 
-    res.json({
-      message: "Portfolio generated",
-      previewUrl: "http://localhost:5000/index.html"
-    });
+    res.json({ message: "Portfolio generated", previewUrl: "http://localhost:5000/index.html" });
   } catch (err) {
-    console.error("❌ AI generation error:", err.response?.data || err.message);
+    console.error("AI generation error:", err.response?.data || err.message);
     res.status(500).json({ error: "AI generation failed", details: err.message });
   }
 });
 
-// Preview locally
+// Preview Portfolio
 app.get("/preview-portfolio", (req, res) => {
   const portfolioPath = path.join(__dirname, "public", "index.html");
   if (fs.existsSync(portfolioPath)) {
@@ -204,7 +168,8 @@ app.get("/preview-portfolio", (req, res) => {
     res.status(404).send("No generated portfolio found.");
   }
 });
-// customize hereee...
+
+// Customize Portfolio
 app.post("/customize-portfolio", async (req, res) => {
   const { userPrompt } = req.body;
 
@@ -214,13 +179,13 @@ app.post("/customize-portfolio", async (req, res) => {
   }
 
   const originalHTML = fs.readFileSync(portfolioPath, "utf8");
-//do not change he structure or layout
+
   const prompt = `
 You are a frontend UI expert. 
 Apply ONLY the following customization to this HTML:
 "${userPrompt}"
 
-Only update things like colors, font, spacing, animations, styles,background etc.
+Only update things like colors, font, spacing, animations, styles, background etc.
 
 HTML to customize:
 ${originalHTML}
@@ -231,22 +196,19 @@ ${originalHTML}
       "https://openrouter.ai/api/v1/chat/completions",
       {
         model: "google/gemini-2.0-flash-exp:free",
-        messages: [{ role: "user", content: prompt }],
+        messages: [{ role: "user", content: prompt }]
       },
       {
         headers: {
           Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+          "Content-Type": "application/json"
+        }
       }
     );
 
-    const raw = response.data.choices[0].message.content;
-    const cleaned = raw
+    const cleaned = response.data.choices[0].message.content
       .replace(/```(html)?/g, "")
       .replace(/```/g, "")
-      .replace(/\\boxed\{/g, "")
-      .replace(/\}$/g, "")
       .trim();
 
     fs.writeFileSync(portfolioPath, cleaned, "utf8");
@@ -258,47 +220,40 @@ ${originalHTML}
   }
 });
 
-
-
-// Deploy to Netlify (✅ unique sharable link, NOT production)
+// Deploy to Netlify
 app.post("/deploy-portfolio", async (req, res) => {
   const publicDir = path.join(__dirname, "public");
   const deployCommand = `netlify deploy --dir="${publicDir}" --message="Resume-based Portfolio"`;
 
-  exec(deployCommand, (error, stdout, stderr) => {
+  exec(deployCommand, (error, stdout) => {
     if (error) {
-      console.error("❌ Netlify deploy error:", error.message);
+      console.error("Netlify deploy error:", error.message);
       return res.status(500).json({ error: "Deployment failed", details: error.message });
     }
 
-    // ✅ Extract unique deploy URL
     const urlMatch = stdout.match(/(https:\/\/[^\s]+\.netlify\.app)/);
-
     if (!urlMatch) {
-      console.error("⚠️ Could not find deploy URL in output.");
       return res.status(500).json({ error: "Deployed, but URL not found" });
     }
 
-    const deployedUrl = urlMatch[1];
-    console.log("✅ Deployed at:", deployedUrl);
-    res.json({ message: "Deployed successfully", deployedUrl });
+    res.json({ message: "Deployed successfully", deployedUrl: urlMatch[1] });
   });
 });
-//se nd the mail
+
+// Send Email
 app.post("/send-email", async (req, res) => {
   const { to, deployedURL } = req.body;
-  console.log(deployedURL);
-  
+
   try {
     let transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: "ppb4975@gmail.com",
-        pass: "vazd acbu bwxl aszr", // Use App Password if using Gmail
+        pass: "vazdacbubwxlaszr", // app password
       },
     });
 
-    let info = await transporter.sendMail({
+    await transporter.sendMail({
       from: '"Portfolio Bot" <ppb4975@gmail.com>',
       to,
       subject: "🚀 Your Portfolio is Ready!",
@@ -311,37 +266,32 @@ app.post("/send-email", async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to send email." });
   }
 });
+
+// Subscribe Endpoint (finish here)
 app.post("/subscribe", async (req, res) => {
   const { email } = req.body;
 
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: "ppb4975@gmail.com",
-      pass: "vazd acbu bwxl aszr",
-    },
-  });
-
-  const mailOptions = {
-    from: "ppb4975@gmail.com",
-    to: email,
-    subject: "Welcome to our Newsletter!",
-    text: "Thanks for subscribing! We’ll send you updates soon.",
-  };
-
   try {
-    await transporter.sendMail(mailOptions);
-    res.json({ message: "Subscription successful!" });
-  } catch (error) {
-    console.error("Error sending email:", error);
-    res.status(500).json({ message: "Failed to send email." });
+    let transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "ppb4975@gmail.com",
+        pass: "vazdacbubwxlaszr", // app password
+      },
+    });
+
+    await transporter.sendMail({
+      from: '"Portfolio Bot" <ppb4975@gmail.com>',
+      to: "ppb4975@gmail.com", // Receive notifications yourself
+      subject: "🔔 New Subscription",
+      text: `A new user subscribed: ${email}`,
+    });
+
+    res.json({ success: true, message: "Subscribed successfully!" });
+  } catch (err) {
+    console.error("Subscription error:", err.message);
+    res.status(500).json({ success: false, message: "Subscription failed." });
   }
 });
 
-
-// Server start
-app.listen(PORT, () => {
-  console.log(`✅ Backend running at http://localhost:${PORT}`);
-});
-
-
+app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
